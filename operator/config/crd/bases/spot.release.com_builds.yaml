@@ -1,0 +1,93 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.3
+  creationTimestamp: null
+  name: builds.spot.release.com
+spec:
+  group: spot.release.com
+  names:
+    kind: Build
+    listKind: BuildList
+    plural: builds
+    singular: build
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.stage
+      name: Stage
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Build is the Schema for the builds API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              image_name:
+                description: ImageName is the name of the component inside the workspace
+                  that needs to build this. It needs to be a unique name inside a
+                  workspace. This is used to update the workspace with the image information
+                  when the image is ready.
+                type: string
+              repo_url:
+                description: RepositoryURL is the URL of the repository it plans to
+                  build
+                type: string
+            type: object
+          status:
+            description: BuildStatus defines the observed state of Build
+            properties:
+              image:
+                description: The Image will store information about the image that
+                  was created by this build. This value is nil until the stage reaches
+                  BuildStageDone
+                properties:
+                  digest:
+                    type: string
+                  url:
+                    type: string
+                type: object
+              pod:
+                description: The Pod that will run the build logic It will be in charge
+                  of updating the status of this Build and store the BuildImage when
+                  the image is ready.
+                properties:
+                  name:
+                    description: '`name` is the name of the pod. Required'
+                    type: string
+                  namespace:
+                    description: '`namespace` is the namespace of the pod. Required'
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+              stage:
+                enum:
+                - Running
+                - Done
+                - Errored
+                type: string
+            required:
+            - stage
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,13 @@
+apiVersion: spot.release.com/v1alpha1
+kind: Workspace
+metadata:
+  labels:
+    app.kubernetes.io/name: workspace
+    app.kubernetes.io/instance: workspace-sample
+    app.kubernetes.io/part-of: spot
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: spot
+  name: workspace-sample
+  namespace: spot-system
+spec:
+  # TODO(user): Add fields here

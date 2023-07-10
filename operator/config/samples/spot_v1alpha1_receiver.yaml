@@ -1,0 +1,12 @@
+apiVersion: spot.release.com/v1alpha1
+kind: Receiver
+metadata:
+  labels:
+    app.kubernetes.io/name: receiver
+    app.kubernetes.io/instance: receiver-sample
+    app.kubernetes.io/part-of: spot
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: spot
+  name: receiver-sample
+spec:
+  # TODO(user): Add fields here
