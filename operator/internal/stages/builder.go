@@ -36,8 +36,14 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 			},
 		},
 		Spec: spot.BuildSpec{
-			ImageName:     "click-mania",
 			RepositoryURL: "https://github.com/releasehub-com/click-mania-test.git",
+			Image: spot.ImageSpec{
+				Name: "click-mania",
+				Tag:  "my-branch",
+				Registry: spot.RegistrySpec{
+					URL: "docker.io/pierolivierrh/click-mania",
+				},
+			},
 		},
 	}}
 

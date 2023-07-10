@@ -112,7 +112,7 @@ func (r *BuildReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 
 		// Update workspace with the Image from the build
-		workspace.Status.Images[build.Spec.ImageName] = *build.Status.Image
+		workspace.Status.Images[build.Spec.Image.Name] = *build.Status.Image
 		if err := r.Client.SubResource("status").Update(ctx, &workspace); err != nil {
 			// Can't update the workspace with this build's information.
 			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)

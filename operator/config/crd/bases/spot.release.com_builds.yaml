@@ -38,12 +38,26 @@ spec:
             type: object
           spec:
             properties:
-              image_name:
-                description: ImageName is the name of the component inside the workspace
-                  that needs to build this. It needs to be a unique name inside a
-                  workspace. This is used to update the workspace with the image information
-                  when the image is ready.
-                type: string
+              image:
+                properties:
+                  name:
+                    description: Name of the component inside the workspace that needs
+                      to build this. It needs to be a unique name inside a workspace.
+                      This is used to update the workspace with the image information
+                      when the image is ready.
+                    type: string
+                  registry:
+                    properties:
+                      url:
+                        description: URL is where the container registry is located
+                          (ecr, docker, google, etc.)
+                        type: string
+                    type: object
+                  tag:
+                    description: Tag is what will be used to tag the image once it's
+                      pushed to the container's registry (ecr, etc.)
+                    type: string
+                type: object
               repo_url:
                 description: RepositoryURL is the URL of the repository it plans to
                   build
