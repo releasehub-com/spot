@@ -118,11 +118,9 @@ func (r *BuildReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)
 		}
 
-		r.EventRecorder.Event(&build, "Normal", string(build.Status.Stage), "Image built and worspace updated; cleaning the build pod")
-
 		var pod core.Pod
 		if err := r.Client.Get(ctx, build.Status.Pod.NamespacedName(), &pod); err != nil {
-			if !k8sErrors.IsNotFound(err) {
+			if k8sErrors.IsNotFound(err) {
 				// Pod was already deleted, can safely return
 				return ctrl.Result{}, nil
 			}
@@ -131,9 +129,11 @@ func (r *BuildReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)
 		}
 
-		// if err := r.Client.Delete(ctx, &pod); err != nil {
-		// 	r.EventRecorder.Event(&build, "Warning", string(build.Status.Stage), fmt.Sprintf("Could not delete the pod as part of housekeeping, pod: %s/%s", pod.Namespace, pod.Name))
-		// }
+		r.EventRecorder.Event(&build, "Normal", string(build.Status.Stage), fmt.Sprintf("Clearing the builder pod(%s/%s)", pod.Namespace, pod.Name))
+
+		if err := r.Client.Delete(ctx, &pod); err != nil {
+			r.EventRecorder.Event(&build, "Warning", string(build.Status.Stage), fmt.Sprintf("Could not delete the pod as part of housekeeping, pod: %s/%s", pod.Namespace, pod.Name))
+		}
 
 	case spot.BuildStageError:
 		// A build error means the whole workspace can't progress further. Let's notify workspace and call it.
@@ -162,17 +162,17 @@ func (r *BuildReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 
 	default:
-		// var pod core.Pod
-		// if err := r.Client.Get(ctx, build.Status.Pod.NamespacedName(), &pod); err != nil {
-		// 	// Pod doesn't exist but we're waiting on it to update us. It's an unrecoverable error here
-		// 	return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)
-		// }
+		var pod core.Pod
+		if err := r.Client.Get(ctx, build.Status.Pod.NamespacedName(), &pod); err != nil {
+			// Pod doesn't exist but we're waiting on it to update us. It's an unrecoverable error here
+			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)
+		}
 
-		// if pod.Status.Phase == core.PodFailed || pod.Status.Phase == core.PodSucceeded {
-		// 	// Pod should be running as this reconciler is waiting for an update from it.
-		// 	// It's an unrecoverable error.
-		// 	return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, fmt.Errorf("builder pod was unexpectly terminated: %s", pod.Status.Phase))
-		// }
+		if pod.Status.Phase == core.PodFailed {
+			// Pod should be running as this reconciler is waiting for an update from it.
+			// It's an unrecoverable error.
+			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, fmt.Errorf("builder pod was unexpectly terminated: %s", pod.Status.Phase))
+		}
 
 		// The Build is self managed at this point in time, let's wait until we can act
 		// on the BuildStage
