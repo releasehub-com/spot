@@ -16,8 +16,8 @@ import (
 func HardCodedBuildFromGithub(ctx context.Context) (*spot.BuildImage, error) {
 	payload := os.Getenv("REGISTRY_AUTH")
 	context := os.Getenv("REPOSITORY_URL")
-	registry := "docker.io/pierolivierrh/click-mania"
-	imageTag := "latest"
+	registry := os.Getenv("REGISTRY_URL")
+	imageTag := os.Getenv("IMAGE_TAG")
 	err := os.Mkdir(fmt.Sprint(os.Getenv("HOME"), "/.docker"), 0777)
 	if err != nil {
 		log.Println(err)

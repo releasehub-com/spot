@@ -241,6 +241,14 @@ func (r *BuildReconciler) buildPod(ctx context.Context, build *spot.Build) (*cor
 						Value: build.Spec.RepositoryURL,
 					},
 					{
+						Name:  "REGISTRY_URL",
+						Value: build.Spec.Image.Registry.URL,
+					},
+					{
+						Name:  "IMAGE_TAG",
+						Value: r.tagForBuild(build),
+					},
+					{
 						Name: "REGISTRY_AUTH",
 						ValueFrom: &core.EnvVarSource{
 							ConfigMapKeyRef: &core.ConfigMapKeySelector{
@@ -277,6 +285,14 @@ func (r *BuildReconciler) buildPod(ctx context.Context, build *spot.Build) (*cor
 	err := r.Client.Create(ctx, pod)
 
 	return pod, err
+}
+
+func (r *BuildReconciler) tagForBuild(build *spot.Build) string {
+	if build.Spec.Image.Tag == nil {
+		return build.Spec.DefaultImageTag
+	}
+
+	return *build.Spec.Image.Tag
 }
 
 func (r *BuildReconciler) markBuildHasErrored(ctx context.Context, build *spot.Build, err error) error {

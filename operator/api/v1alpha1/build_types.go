@@ -25,6 +25,10 @@ type BuildSpec struct {
 	RepositoryURL string `json:"repo_url,omitempty"`
 
 	Image ImageSpec `json:"image,omitempty"`
+
+	// Defaults to this tag if the Image doesn't
+	// have one set. It is usually set by the workspace
+	DefaultImageTag string `json:"default_image_tag"`
 }
 
 // BuildStatus defines the observed state of Build

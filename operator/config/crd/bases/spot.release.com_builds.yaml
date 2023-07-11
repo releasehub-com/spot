@@ -38,6 +38,10 @@ spec:
             type: object
           spec:
             properties:
+              default_image_tag:
+                description: Defaults to this tag if the Image doesn't have one set.
+                  It is usually set by the workspace
+                type: string
               image:
                 properties:
                   name:
@@ -54,6 +58,8 @@ spec:
                         description: URL is where the container registry is located
                           (ecr, docker, google, etc.)
                         type: string
+                    required:
+                    - url
                     type: object
                   repository_context:
                     description: 'RepositoryContext information is passed down to
@@ -84,6 +90,8 @@ spec:
                 description: RepositoryURL is the URL of the repository it plans to
                   build
                 type: string
+            required:
+            - default_image_tag
             type: object
           status:
             description: BuildStatus defines the observed state of Build

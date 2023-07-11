@@ -22,6 +22,10 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 		return b.markWorkspaceHasErrored(ctx, workspace, errors.New("unexpected builds present for this workspace"))
 	}
 
+	if workspace.Spec.Tag == nil || len(*workspace.Spec.Tag) == 0 {
+		return errors.New("Workspace.Spec.Tag is not set")
+	}
+
 	tag := "my-branch"
 	builds := []*spot.Build{{
 		ObjectMeta: meta.ObjectMeta{
@@ -37,7 +41,8 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 			},
 		},
 		Spec: spot.BuildSpec{
-			RepositoryURL: "https://github.com/releasehub-com/click-mania-test.git",
+			RepositoryURL:   "https://github.com/releasehub-com/click-mania-test.git",
+			DefaultImageTag: *workspace.Spec.Tag,
 			Image: spot.ImageSpec{
 				Name: "click-mania",
 				Tag:  &tag,

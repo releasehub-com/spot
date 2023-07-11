@@ -63,7 +63,7 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		builder := stages.Builder{Client: r.Client}
 		err := builder.Start(ctx, &workspace)
 		if err != nil {
-			return ctrl.Result{}, err
+			return ctrl.Result{}, r.markWorkspaceHasErrored(ctx, &workspace, err)
 		}
 
 	// The Workspace launched the builders but those have not
@@ -94,4 +94,10 @@ func (r *WorkspaceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&spot.Workspace{}).
 		Complete(r)
+}
+
+func (r *WorkspaceReconciler) markWorkspaceHasErrored(ctx context.Context, workspace *spot.Workspace, err error) error {
+	r.EventRecorder.Event(workspace, "Warning", string(spot.WorkspaceStageError), err.Error())
+	workspace.Status.Stage = spot.WorkspaceStageError
+	return r.Client.Status().Update(ctx, workspace)
 }
