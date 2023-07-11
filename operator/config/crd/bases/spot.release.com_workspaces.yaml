@@ -39,9 +39,82 @@ spec:
           spec:
             properties:
               branch:
+                properties:
+                  name:
+                    type: string
+                  url:
+                    type: string
+                required:
+                - name
+                - url
+                type: object
+              components:
+                description: Collection of all the components that are required for
+                  this workspace to deploy.
+                items:
+                  properties:
+                    image:
+                      description: Defines how the image is built for this component
+                        The workspace will aggregate all the images at build time
+                        and will deduplicate the images so only 1 unique image is
+                        built.
+                      properties:
+                        name:
+                          description: Name of the component inside the workspace
+                            that needs to build this. It needs to be a unique name
+                            inside a workspace. This is used to update the workspace
+                            with the image information when the image is ready.
+                          type: string
+                        registry:
+                          description: Registry is where all the information for the
+                            container Registry is located.
+                          properties:
+                            url:
+                              description: URL is where the container registry is
+                                located (ecr, docker, google, etc.)
+                              type: string
+                          type: object
+                        repository_context:
+                          description: 'RepositoryContext information is passed down
+                            to buildkit as instruction on how to proceed with the
+                            repository If the RepositoryContext is not set, it will
+                            use the default: Dockerfile: "Dockerfile" Path: "."'
+                          properties:
+                            dockerfile:
+                              description: Location of your Dockerfile within the
+                                repository.
+                              type: string
+                            path:
+                              description: Path is what docker calls `context`. It's
+                                the location for the content of your build within
+                                the repository.
+                              type: string
+                          required:
+                          - dockerfile
+                          - path
+                          type: object
+                        tag:
+                          description: Tag is what will be used to tag the image once
+                            it's pushed to the container's registry (ecr, etc.) If
+                            no tag is set, it will use the workspace tag This can
+                            be useful if a workspace builds multiple images and each
+                            of the images will be tagged the same value.
+                          type: string
+                      type: object
+                    name:
+                      type: string
+                  required:
+                  - image
+                  - name
+                  type: object
+                type: array
+              tag:
+                description: Default tag for all the images that are build that don't
+                  have a tag specified to them. If no value is set, it will be created
+                  before the builds starts.
                 type: string
-              branch_url:
-                type: string
+            required:
+            - branch
             type: object
           status:
             description: WorkspaceStatus defines the observed state of Workspace

@@ -35,8 +35,31 @@ const (
 )
 
 type WorkspaceSpec struct {
-	Branch    string `json:"branch,omitempty"`
-	BranchURL string `json:"branch_url,omitempty"`
+	Branch BranchSpec `json:"branch"`
+
+	// Collection of all the components that are required for this
+	// workspace to deploy.
+	Components []ComponentSpec `json:"components,omitempty"`
+
+	// Default tag for all the images that are build that don't
+	// have a tag specified to them. If no value is set,
+	// it will be created before the builds starts.
+	// +optional
+	Tag *string `json:"tag,omitempty"`
+}
+
+type BranchSpec struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type ComponentSpec struct {
+	Name string `json:"name"`
+
+	// Defines how the image is built for this component
+	// The workspace will aggregate all the images at build time and
+	// will deduplicate the images so only 1 unique image is built.
+	Image ImageSpec `json:"image"`
 }
 
 // WorkspaceStatus defines the observed state of Workspace

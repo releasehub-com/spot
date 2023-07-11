@@ -22,6 +22,7 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 		return b.markWorkspaceHasErrored(ctx, workspace, errors.New("unexpected builds present for this workspace"))
 	}
 
+	tag := "my-branch"
 	builds := []*spot.Build{{
 		ObjectMeta: meta.ObjectMeta{
 			Namespace:    workspace.Namespace,
@@ -39,7 +40,7 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 			RepositoryURL: "https://github.com/releasehub-com/click-mania-test.git",
 			Image: spot.ImageSpec{
 				Name: "click-mania",
-				Tag:  "my-branch",
+				Tag:  &tag,
 				Registry: spot.RegistrySpec{
 					URL: "docker.io/pierolivierrh/click-mania",
 				},

@@ -47,15 +47,37 @@ spec:
                       when the image is ready.
                     type: string
                   registry:
+                    description: Registry is where all the information for the container
+                      Registry is located.
                     properties:
                       url:
                         description: URL is where the container registry is located
                           (ecr, docker, google, etc.)
                         type: string
                     type: object
+                  repository_context:
+                    description: 'RepositoryContext information is passed down to
+                      buildkit as instruction on how to proceed with the repository
+                      If the RepositoryContext is not set, it will use the default:
+                      Dockerfile: "Dockerfile" Path: "."'
+                    properties:
+                      dockerfile:
+                        description: Location of your Dockerfile within the repository.
+                        type: string
+                      path:
+                        description: Path is what docker calls `context`. It's the
+                          location for the content of your build within the repository.
+                        type: string
+                    required:
+                    - dockerfile
+                    - path
+                    type: object
                   tag:
                     description: Tag is what will be used to tag the image once it's
-                      pushed to the container's registry (ecr, etc.)
+                      pushed to the container's registry (ecr, etc.) If no tag is
+                      set, it will use the workspace tag This can be useful if a workspace
+                      builds multiple images and each of the images will be tagged
+                      the same value.
                     type: string
                 type: object
               repo_url:

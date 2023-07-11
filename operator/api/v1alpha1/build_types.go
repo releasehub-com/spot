@@ -27,28 +27,6 @@ type BuildSpec struct {
 	Image ImageSpec `json:"image,omitempty"`
 }
 
-type ImageSpec struct {
-	// Name of the component inside the workspace that
-	// needs to build this. It needs to be a unique name inside a workspace.
-	// This is used to update the workspace with the image information
-	// when the image is ready.
-	Name string `json:"name,omitempty"`
-
-	// Tag is what will be used to tag the image once it's
-	// pushed to the container's registry (ecr, etc.)
-	Tag string `json:"tag,omitempty"`
-
-	// Registry is where all the information for the container
-	// Registry is located.
-
-	Registry RegistrySpec `json:"registry,omitempty"`
-}
-
-type RegistrySpec struct {
-	// URL is where the container registry is located (ecr, docker, google, etc.)
-	URL string `json:"url,omitempty"`
-}
-
 // BuildStatus defines the observed state of Build
 type BuildStatus struct {
 	Stage BuildStage `json:"stage"`
