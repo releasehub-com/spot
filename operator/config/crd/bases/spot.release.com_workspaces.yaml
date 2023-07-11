@@ -59,28 +59,18 @@ spec:
                         and will deduplicate the images so only 1 unique image is
                         built.
                       properties:
-                        name:
-                          description: Name of the component inside the workspace
-                            that needs to build this. It needs to be a unique name
-                            inside a workspace. This is used to update the workspace
-                            with the image information when the image is ready.
-                          type: string
                         registry:
                           description: Registry is where all the information for the
-                            container Registry is located.
-                          properties:
-                            url:
-                              description: URL is where the container registry is
-                                located (ecr, docker, google, etc.)
-                              type: string
-                          required:
-                          - url
+                            container registry lives. It needs to be properly configured
+                            for the build to be pushed successfully. A build is pushed
+                            to the registry only if the `RepositoryContext` exists
+                            with this `Registry`
                           type: object
                         repository_context:
-                          description: 'RepositoryContext information is passed down
+                          description: RepositoryContext information is passed down
                             to buildkit as instruction on how to proceed with the
-                            repository If the RepositoryContext is not set, it will
-                            use the default: Dockerfile: "Dockerfile" Path: "."'
+                            repository. The image will be build from source if the
+                            `RepositoryContext` is set.
                           properties:
                             dockerfile:
                               description: Location of your Dockerfile within the
@@ -102,6 +92,13 @@ spec:
                             be useful if a workspace builds multiple images and each
                             of the images will be tagged the same value.
                           type: string
+                        url:
+                          description: URL for the image. If the `RepositoryContext`
+                            is set, the image built will be pushed to this URL, using
+                            the `RegistrySpec` data.
+                          type: string
+                      required:
+                      - url
                       type: object
                     name:
                       type: string

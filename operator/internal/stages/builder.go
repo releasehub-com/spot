@@ -26,7 +26,6 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 		return errors.New("Workspace.Spec.Tag is not set")
 	}
 
-	tag := "my-branch"
 	builds := []*spot.Build{{
 		ObjectMeta: meta.ObjectMeta{
 			Namespace:    workspace.Namespace,
@@ -44,11 +43,13 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 			RepositoryURL:   "https://github.com/releasehub-com/click-mania-test.git",
 			DefaultImageTag: *workspace.Spec.Tag,
 			Image: spot.ImageSpec{
-				Name: "click-mania",
-				Tag:  &tag,
-				Registry: spot.RegistrySpec{
-					URL: "docker.io/pierolivierrh/click-mania",
+				URL: "docker.io/pierolivierrh/click-mania",
+				Tag: workspace.Spec.Tag,
+				RepositoryContext: &spot.RepositoryContextSpec{
+					Dockerfile: "Dockerfile",
+					Path:       ".",
 				},
+				Registry: &spot.RegistrySpec{},
 			},
 		},
 	}}
