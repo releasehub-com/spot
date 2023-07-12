@@ -10,4 +10,25 @@ metadata:
   name: click-mania
   namespace: spot-system
 spec:
-  # TODO(user): Add fields here
+  branch:
+    name: "main"
+    url: "github.com/my-org/my-repo"
+  components:
+    - name: "click-mania"
+      services:
+        - name: "https"
+          port: 3000
+          ingress: "app" #app.yolo.com
+      image:
+        name: "my-image" #u
+        tag: "main"
+        registry:
+          type: "docker"
+          url: "docker.io/my-org/my-image"
+    - name: "mysql"
+      services:
+        - name: "tcp"
+          port: 3036
+      image:
+        name: "mysql"
+        tag: "8.0.33"

@@ -10,4 +10,27 @@ metadata:
   name: workspace-sample
   namespace: spot-system
 spec:
-  # TODO(user): Add fields here
+  branch:
+    name: "rel-1234-my-branch"
+    url: "github.com/my-org/my-repo/my-branch"
+  components:
+    - name: "click-mania"
+      services:
+        - name: "https"
+          port: 3000
+          ingress: "app" #app.yolo.com
+      image:
+        name: "my-image" #u
+        registry:
+          type: "docker"
+          url: "docker.io/my-org/my-image"
+        repository_context:
+          dockerfile: "Dockerfile"
+          path: "." # Maybe this could be a git URL too? Relative path = branch.url
+    - name: "mysql"
+      services:
+        - name: "tcp"
+          port: 3036
+      image:
+        name: "mysql"
+        tag: "8.0.33"
