@@ -24,6 +24,9 @@ type BuildSpec struct {
 	// RepositoryURL is the URL of the repository it plans to build
 	RepositoryURL string `json:"repo_url,omitempty"`
 
+	// Information about the image that's going to be built
+	// For an image to be succesfully built, it needs to have
+	// a RegistrySpec associated with it.
 	Image ImageSpec `json:"image,omitempty"`
 
 	// Defaults to this tag if the Image doesn't
@@ -80,6 +83,14 @@ func (b *Build) GetReference() BuildReference {
 		Namespace: b.Namespace,
 		Name:      b.Name,
 	}
+}
+
+func (b *Build) ImageURL() string {
+	if b.Spec.Image.Registry != nil {
+		return b.Spec.Image.Registry.URL
+	}
+
+	return b.Spec.Image.Name
 }
 
 //+kubebuilder:object:root=true

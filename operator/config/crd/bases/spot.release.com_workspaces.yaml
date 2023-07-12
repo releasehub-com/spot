@@ -59,12 +59,22 @@ spec:
                         and will deduplicate the images so only 1 unique image is
                         built.
                       properties:
+                        name:
+                          description: Name of the image. If the image is not an official
+                            one and a URL needs to be provided, `RegistrySpec` needs
+                            to provide that URL.
+                          type: string
                         registry:
                           description: Registry is where all the information for the
                             container registry lives. It needs to be properly configured
                             for the build to be pushed successfully. A build is pushed
                             to the registry only if the `RepositoryContext` exists
                             with this `Registry`
+                          properties:
+                            url:
+                              type: string
+                          required:
+                          - url
                           type: object
                         repository_context:
                           description: RepositoryContext information is passed down
@@ -92,13 +102,8 @@ spec:
                             be useful if a workspace builds multiple images and each
                             of the images will be tagged the same value.
                           type: string
-                        url:
-                          description: URL for the image. If the `RepositoryContext`
-                            is set, the image built will be pushed to this URL, using
-                            the `RegistrySpec` data.
-                          type: string
                       required:
-                      - url
+                      - name
                       type: object
                     name:
                       type: string
