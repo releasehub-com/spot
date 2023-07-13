@@ -112,7 +112,7 @@ func (r *BuildReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 
 		// Update workspace with the Image from the build
-		workspace.Status.Images[fmt.Sprintf("%s:%s", build.ImageURL(), *build.Spec.Image.Tag)] = *build.Status.Image
+		workspace.Status.Images[fmt.Sprintf("%s:%s", build.ImageURL(), r.tagFor(&build))] = *build.Status.Image
 		if err := r.Client.SubResource("status").Update(ctx, &workspace); err != nil {
 			// Can't update the workspace with this build's information.
 			return ctrl.Result{}, r.markBuildHasErrored(ctx, &build, err)
@@ -246,7 +246,7 @@ func (r *BuildReconciler) buildPod(ctx context.Context, build *spot.Build) (*cor
 					},
 					{
 						Name:  "IMAGE_TAG",
-						Value: *build.Spec.Image.Tag,
+						Value: r.tagFor(build),
 					},
 					{
 						Name: "REGISTRY_AUTH",
@@ -285,6 +285,14 @@ func (r *BuildReconciler) buildPod(ctx context.Context, build *spot.Build) (*cor
 	err := r.Client.Create(ctx, pod)
 
 	return pod, err
+}
+
+func (r *BuildReconciler) tagFor(build *spot.Build) string {
+	if build.Spec.Image.Tag == nil {
+		return build.Spec.DefaultImageTag
+	}
+
+	return *build.Spec.Image.Tag
 }
 
 func (r *BuildReconciler) markBuildHasErrored(ctx context.Context, build *spot.Build, err error) error {

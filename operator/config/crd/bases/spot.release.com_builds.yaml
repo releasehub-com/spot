@@ -58,9 +58,14 @@ spec:
                       to be pushed successfully. A build is pushed to the registry
                       only if the `RepositoryContext` exists with this `Registry`
                     properties:
+                      type:
+                        description: 'TODO: Not sure this is the way to go, might
+                          replace it'
+                        type: string
                       url:
                         type: string
                     required:
+                    - type
                     - url
                     type: object
                   repository_context:

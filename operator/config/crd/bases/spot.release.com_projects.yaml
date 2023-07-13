@@ -35,9 +35,7 @@ spec:
           spec:
             description: ProjectSpec defines the desired state of Project
             properties:
-              foo:
-                description: Foo is an example field of Project. Edit project_types.go
-                  to remove/update
+              name:
                 type: string
             type: object
           status:

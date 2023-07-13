@@ -49,6 +49,7 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 			Spec: spot.BuildSpec{
 				Image:           component.Image,
 				DefaultImageTag: *workspace.Spec.Tag,
+				RepositoryURL:   workspace.Spec.Branch.URL,
 			},
 		}
 

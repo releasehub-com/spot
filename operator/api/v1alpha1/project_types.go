@@ -25,11 +25,7 @@ import (
 
 // ProjectSpec defines the desired state of Project
 type ProjectSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Project. Edit project_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // ProjectStatus defines the observed state of Project
