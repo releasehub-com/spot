@@ -2,6 +2,7 @@ package stages
 
 import (
 	"context"
+	"fmt"
 
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -17,224 +18,188 @@ type Deployment struct {
 }
 
 func (d *Deployment) Start(ctx context.Context, workspace *spot.Workspace) error {
-	mysql := core.Pod{
-		ObjectMeta: meta.ObjectMeta{
-			GenerateName: "mysql-",
-			Namespace:    workspace.Namespace,
-			Labels: map[string]string{
-				"app.kubernetes.io/name": "mysql",
-			},
-			OwnerReferences: []meta.OwnerReference{
-				{
-					APIVersion: workspace.APIVersion,
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					UID:        workspace.UID,
-				},
-			},
-		},
-		Spec: core.PodSpec{
-			RestartPolicy: core.RestartPolicyNever,
-			Containers: []core.Container{
-				{
-					Name:  "mysql",
-					Image: "mysql",
-					Ports: []core.ContainerPort{
-						{
-							Name:          "mysql",
-							HostPort:      3306,
-							ContainerPort: 3306,
-						},
-					},
-					Env: []core.EnvVar{
-						{
-							Name:  "MYSQL_DATABASE",
-							Value: "click-me",
-						},
-						{
-							Name:  "MYSQL_USER",
-							Value: "big",
-						},
-						{
-							Name:  "MYSQL_PASSWORD",
-							Value: "lebowski",
-						},
-						{
-							Name:  "MYSQL_ROOT_PASSWORD",
-							Value: "Yeah, well, that is just, like, your opinion, man.",
-						},
+	services := make(map[string]*core.Service)
+
+	for _, component := range workspace.Spec.Components {
+		service := core.Service{
+			ObjectMeta: meta.ObjectMeta{
+				Name:      component.Name,
+				Namespace: workspace.Namespace,
+				OwnerReferences: []meta.OwnerReference{
+					{
+						APIVersion: workspace.APIVersion,
+						Kind:       workspace.Kind,
+						Name:       workspace.Name,
+						UID:        workspace.UID,
 					},
 				},
 			},
-		},
-	}
-
-	if err := d.Client.Create(ctx, &mysql); err != nil {
-		return err
-	}
-
-	mysqlService := core.Service{
-		ObjectMeta: meta.ObjectMeta{
-			GenerateName: "mysql-service-",
-			Namespace:    workspace.Namespace,
-			OwnerReferences: []meta.OwnerReference{
-				{
-					APIVersion: workspace.APIVersion,
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					UID:        workspace.UID,
+			Spec: core.ServiceSpec{
+				Selector: map[string]string{
+					"app.kubernetes.io/name": component.Name,
+				},
+				Ports: []core.ServicePort{
+					{
+						Name:       component.Name,
+						Port:       int32(component.Services[0].Port),
+						TargetPort: intstr.FromInt(component.Services[0].Port),
+					},
 				},
 			},
-		},
-		Spec: core.ServiceSpec{
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "mysql",
-			},
-			Ports: []core.ServicePort{
-				{
-					Name:       "mysql",
-					Port:       3306,
-					TargetPort: intstr.FromInt(3306),
-				},
-			},
-		},
-	}
+		}
 
-	if err := d.Client.Create(ctx, &mysqlService); err != nil {
-		return err
-	}
+		if err := d.Client.Create(ctx, &service); err != nil {
+			return err
+		}
 
-	click := core.Pod{
-		ObjectMeta: meta.ObjectMeta{
-			GenerateName: "click-mania-",
-			Namespace:    workspace.Namespace,
-			Labels: map[string]string{
-				"app.kubernetes.io/name": "click-mania",
-			},
-			OwnerReferences: []meta.OwnerReference{
-				{
-					APIVersion: workspace.APIVersion,
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					UID:        workspace.UID,
-				},
-			},
-		},
-		Spec: core.PodSpec{
-			RestartPolicy: core.RestartPolicyAlways,
-			Containers: []core.Container{
-				{
-					Name:  "click-mania",
-					Image: workspace.Status.Images["click-mania"].URL,
-					Ports: []core.ContainerPort{
+		services[component.Name] = &service
+
+		if len(component.Services[0].Ingress) != 0 {
+			ingressClassName := "nginx"
+			pathType := networking.PathTypePrefix
+
+			ingress := &networking.Ingress{
+				ObjectMeta: meta.ObjectMeta{
+					Name:      "click-mania",
+					Namespace: workspace.Namespace,
+					OwnerReferences: []meta.OwnerReference{
 						{
-							Name:          "server",
-							HostPort:      3000,
-							ContainerPort: 3000,
+							APIVersion: workspace.APIVersion,
+							Kind:       workspace.Kind,
+							Name:       workspace.Name,
+							UID:        workspace.UID,
 						},
 					},
-					Env: []core.EnvVar{
-						{
-							Name:  "DB_NAME",
-							Value: "click-me",
-						},
-						{
-							Name:  "DB_USER",
-							Value: "big",
-						},
-						{
-							Name:  "DB_PASSWORD",
-							Value: "lebowski",
-						},
-						{
-							Name:  "DB_HOST",
-							Value: mysqlService.Name,
-						},
-					},
-					Command: []string{"wait-for-it", "mysql:3306", "--", "/srv/aurora-test", "start"},
 				},
-			},
-		},
-	}
-
-	if err := d.Client.Create(ctx, &click); err != nil {
-		return err
-	}
-
-	clickService := core.Service{
-		ObjectMeta: meta.ObjectMeta{
-			Name:      "click-mania",
-			Namespace: workspace.Namespace,
-			OwnerReferences: []meta.OwnerReference{
-				{
-					APIVersion: workspace.APIVersion,
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					UID:        workspace.UID,
-				},
-			},
-		},
-		Spec: core.ServiceSpec{
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "click-mania",
-			},
-			Ports: []core.ServicePort{
-				{
-					Name:       "click-mania",
-					Port:       3000,
-					TargetPort: intstr.FromInt(3000),
-				},
-			},
-		},
-	}
-
-	if err := d.Client.Create(ctx, &clickService); err != nil {
-		return err
-	}
-
-	ingressClassName := "nginx"
-	pathType := networking.PathTypePrefix
-
-	ingress := &networking.Ingress{
-		ObjectMeta: meta.ObjectMeta{
-			Name:      "click-mania",
-			Namespace: workspace.Namespace,
-			OwnerReferences: []meta.OwnerReference{
-				{
-					APIVersion: workspace.APIVersion,
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					UID:        workspace.UID,
-				},
-			},
-		},
-		Spec: networking.IngressSpec{
-			IngressClassName: &ingressClassName,
-			Rules: []networking.IngressRule{{
-				Host: "click-mania.po.ngrok.app",
-				IngressRuleValue: networking.IngressRuleValue{
-					HTTP: &networking.HTTPIngressRuleValue{
-						Paths: []networking.HTTPIngressPath{{
-							Path:     "/",
-							PathType: &pathType,
-							Backend: networking.IngressBackend{
-								Service: &networking.IngressServiceBackend{
-									Name: "click-mania",
-									Port: networking.ServiceBackendPort{Number: 3000},
-								},
+				Spec: networking.IngressSpec{
+					IngressClassName: &ingressClassName,
+					Rules: []networking.IngressRule{{
+						Host: "click-mania.po.ngrok.app",
+						IngressRuleValue: networking.IngressRuleValue{
+							HTTP: &networking.HTTPIngressRuleValue{
+								Paths: []networking.HTTPIngressPath{{
+									Path:     "/",
+									PathType: &pathType,
+									Backend: networking.IngressBackend{
+										Service: &networking.IngressServiceBackend{
+											Name: services["click-mania"].Name,
+											Port: networking.ServiceBackendPort{Number: services["click-mania"].Spec.Ports[0].Port},
+										},
+									},
+								}},
 							},
-						}},
-					},
+						},
+					}},
 				},
-			}},
-		},
+			}
+
+			if err := d.Client.Create(ctx, ingress); err != nil {
+				return err
+			}
+
+		}
 	}
 
-	if err := d.Client.Create(ctx, ingress); err != nil {
-		return err
+	for _, component := range workspace.Spec.Components {
+		envs, err := d.environmentsForComponent(&component, workspace)
+		if err != nil {
+			return err
+		}
+
+		pod := core.Pod{
+			ObjectMeta: meta.ObjectMeta{
+				GenerateName: fmt.Sprintf("%s-", component.Name),
+				Namespace:    workspace.Namespace,
+				Labels: map[string]string{
+					"app.kubernetes.io/name": component.Name,
+				},
+				OwnerReferences: []meta.OwnerReference{
+					{
+						APIVersion: workspace.APIVersion,
+						Kind:       workspace.Kind,
+						Name:       workspace.Name,
+						UID:        workspace.UID,
+					},
+				},
+			},
+			Spec: core.PodSpec{
+				RestartPolicy: core.RestartPolicyNever,
+				Containers: []core.Container{
+					{
+						Name:  component.Name,
+						Image: component.Image.Name,
+						Ports: []core.ContainerPort{
+							{
+								Name:          component.Services[0].Protocol,
+								HostPort:      int32(component.Services[0].Port),
+								ContainerPort: int32(component.Services[0].Port),
+							},
+						},
+						Env: envs,
+					},
+				},
+			},
+		}
+
+		if len(component.Command) != 0 {
+			pod.Spec.Containers[0].Command = component.Command
+		}
+
+		if err := d.Client.Create(ctx, &pod); err != nil {
+			return err
+		}
 	}
 
 	workspace.Status.Stage = spot.WorkspaceStageRunning
 
 	return d.Client.SubResource("status").Update(ctx, workspace)
+}
+
+func (d *Deployment) environmentsForComponent(component *spot.ComponentSpec, workspace *spot.Workspace) ([]core.EnvVar, error) {
+	var environments []core.EnvVar
+
+	for _, env := range component.Environments {
+		envVar := core.EnvVar{}
+
+		if len(env.Alias) != 0 {
+			envVar.Name = env.Alias
+		} else {
+			envVar.Name = env.Name
+		}
+
+		if env.Value != nil {
+			envVar.Value = *env.Value
+		} else {
+			value, err := d.valueForEnvironmentName(env.Name, workspace)
+
+			if err != nil {
+				// Most likely a user error, let's bail right now and
+				// let the user correct his mistake.
+				return nil, err
+			}
+
+			envVar.Value = value
+		}
+
+		environments = append(environments, envVar)
+	}
+
+	return environments, nil
+}
+
+func (d *Deployment) valueForEnvironmentName(name string, workspace *spot.Workspace) (string, error) {
+	var value string
+
+	for _, env := range workspace.Spec.Environments {
+		if env.Name == name {
+			value = env.Value
+			break
+		}
+	}
+
+	if len(value) == 0 {
+		return value, fmt.Errorf("couldn't find an environment for %s", name)
+	}
+
+	return value, nil
 }

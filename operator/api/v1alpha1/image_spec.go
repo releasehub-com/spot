@@ -20,10 +20,10 @@ type ImageSpec struct {
 	// and each of the images will be tagged the same value.
 	Tag *string `json:"tag,omitempty"`
 
-	// URL for the image. If the `RepositoryContext` is set, the
-	// image built will be pushed to this URL, using the `RegistrySpec`
-	// data.
-	URL string `json:"url"`
+	// Name of the image. If the image is not an official
+	// one and a URL needs to be provided, `RegistrySpec`
+	// needs to provide that URL.
+	Name string `json:"name"`
 }
 
 type RepositoryContextSpec struct {

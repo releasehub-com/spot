@@ -10,27 +10,58 @@ metadata:
   name: workspace-sample
   namespace: spot-system
 spec:
+  tag: "some-test"
+  project:
+    name: "spacedust"
   branch:
     name: "rel-1234-my-branch"
-    url: "github.com/my-org/my-repo/my-branch"
+    url: "https://github.com/releasehub-com/click-mania-test.git"
   components:
     - name: "click-mania"
+      command: 
+        - "wait-for-it"
+        - "mysql:3306"
+        - "--"
+        - "/srv/aurora-test"
+        - "start"
       services:
-        - name: "https"
-          port: 3000
+        - port: 3000
           ingress: "app" #app.yolo.com
+      environments:
+        - name: "MYSQL_USER"
+          as: "DB_USER"
+        - name: "MYSQL_PASSWORD"
+          as: "DB_PASSWORD"
+        - name: "MYSQL_DATABASE"
+          as: "DB_NAME"
+        - name: "DB_HOST"
+          value: "mysql"
       image:
-        name: "my-image" #u
+        name: "pierolivierrh/click-mania"
         registry:
           type: "docker"
-          url: "docker.io/my-org/my-image"
+          url: "pierolivierrh/click-mania"
         repository_context:
           dockerfile: "Dockerfile"
           path: "." # Maybe this could be a git URL too? Relative path = branch.url
     - name: "mysql"
       services:
-        - name: "tcp"
-          port: 3036
+        - protocol: "tcp"
+          port: 3306
+      environments:
+        - name: "MYSQL_USER"
+        - name: "MYSQL_DATABASE"
+        - name: "MYSQL_PASSWORD"
+        - name: "MYSQL_ROOT_PASSWORD"
       image:
         name: "mysql"
         tag: "8.0.33"
+  environments:
+    - name: "MYSQL_USER"
+      value: "big"
+    - name: "MYSQL_DATABASE"
+      value: "click-me"
+    - name: "MYSQL_PASSWORD"
+      value: "lebowski"
+    - name: "MYSQL_ROOT_PASSWORD"
+      value: "Yeah, well, that is just, like, your opinion, man."

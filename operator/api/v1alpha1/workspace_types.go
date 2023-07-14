@@ -41,6 +41,13 @@ type WorkspaceSpec struct {
 	// workspace to deploy.
 	Components []ComponentSpec `json:"components,omitempty"`
 
+	// Defines all the environments that will be needed for this workspace
+	Environments []EnvironmentSpec `json:"environments"`
+
+	// Name of the project this workspace belongs to. Can maybe replace it with
+	// a metadata label and owner reference.
+	Project ProjectSpec `json:"project"`
+
 	// Default tag for all the images that are build that don't
 	// have a tag specified to them. If no value is set,
 	// it will be created before the builds starts.
@@ -53,13 +60,15 @@ type BranchSpec struct {
 	URL  string `json:"url"`
 }
 
-type ComponentSpec struct {
-	Name string `json:"name"`
+type ServiceSpec struct {
+	Ingress  string `json:"ingress,omitempty"`
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol,omitempty"`
+}
 
-	// Defines how the image is built for this component
-	// The workspace will aggregate all the images at build time and
-	// will deduplicate the images so only 1 unique image is built.
-	Image ImageSpec `json:"image"`
+type EnvironmentSpec struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 // WorkspaceStatus defines the observed state of Workspace

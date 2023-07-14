@@ -26,33 +26,35 @@ func (b *Builder) Start(ctx context.Context, workspace *spot.Workspace) error {
 		return errors.New("Workspace.Spec.Tag is not set")
 	}
 
-	builds := []*spot.Build{{
-		ObjectMeta: meta.ObjectMeta{
-			Namespace:    workspace.Namespace,
-			GenerateName: "my-build-",
-			OwnerReferences: []meta.OwnerReference{
-				{
-					Kind:       workspace.Kind,
-					Name:       workspace.Name,
-					APIVersion: workspace.APIVersion,
-					UID:        workspace.UID,
+	var builds []*spot.Build
+	for _, component := range workspace.Spec.Components {
+		if component.Image.Registry == nil {
+			// This image is not going to be built, let's exclude it from the build slice
+			continue
+		}
+
+		build := &spot.Build{
+			ObjectMeta: meta.ObjectMeta{
+				Namespace:    workspace.Namespace,
+				GenerateName: "my-build-",
+				OwnerReferences: []meta.OwnerReference{
+					{
+						Kind:       workspace.Kind,
+						Name:       workspace.Name,
+						APIVersion: workspace.APIVersion,
+						UID:        workspace.UID,
+					},
 				},
 			},
-		},
-		Spec: spot.BuildSpec{
-			RepositoryURL:   "https://github.com/releasehub-com/click-mania-test.git",
-			DefaultImageTag: *workspace.Spec.Tag,
-			Image: spot.ImageSpec{
-				URL: "docker.io/pierolivierrh/click-mania",
-				Tag: workspace.Spec.Tag,
-				RepositoryContext: &spot.RepositoryContextSpec{
-					Dockerfile: "Dockerfile",
-					Path:       ".",
-				},
-				Registry: &spot.RegistrySpec{},
+			Spec: spot.BuildSpec{
+				Image:           component.Image,
+				DefaultImageTag: *workspace.Spec.Tag,
+				RepositoryURL:   workspace.Spec.Branch.URL,
 			},
-		},
-	}}
+		}
+
+		builds = append(builds, build)
+	}
 
 	var references []spot.BuildReference
 	for _, build := range builds {
